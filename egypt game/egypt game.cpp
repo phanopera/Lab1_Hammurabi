@@ -1,11 +1,14 @@
-﻿// egypt game.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
+// egypt game.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
-#include <cmath>
 #include <iostream>
+#include <cmath>
+#include <fstream>
+#include <string>
+
 using namespace std;
-void checkResources(int, int);
 void inputResorces();
 void newTurn();
+void checkSaves();
 
 //---ресурсы города---
 int nationCount;
@@ -26,12 +29,16 @@ float psenicaAdd; //прирост пшеницы на 1 акре
 float psenicaLost; //сколько шпеницы пожрали крысуки
 
 bool leftGame;
+bool fileExsists;
 
 int inputLand; //ввод земель под покупку
+int inputSentLand; //ввод земель под покупку
 int inputFood; //ввод пшеницы на еду
 int inputPsenica; //ввод пшеницы на заceивание
 bool restartInput;
 
+string path = "filename.txt";
+string fileText;
 
 //~~~~~~НАЧАЛО НОВОЙ ИГРЫ~~~~~~
 void Restart() {
@@ -43,37 +50,40 @@ void Restart() {
     nationDead = 0;
     P = 0;
     leftGame = false;
-    std::cout << "Мой повелитель, соизволь поведать тебе:\n";
-    std::cout << "    Население города сейчас составляет " << nationCount << " человек;\n";
-    std::cout << "    Мы собрали " << psenicaCount << " бушелей пшеницы;\n";
+    std::cout << "Мой повелитель, соизволь поведать тебе:"<< endl;
+    std::cout << "    Население города сейчас составляет " << nationCount << " человек;"<< endl;
+    std::cout << "    Мы собрали " << psenicaCount << " бушелей пшеницы;"<< endl;
+    std::cout << "    Город сейчас занимает " << landCount << " акров;" << endl;
     inputResorces();
 }
 //~~~~~~ВВОД И ПРОВЕРКА РЕСУРСОВ~~~~~~
 void inputResorces() {
-    std::cout << "    Город сейчас занимает " << landCount << " акров;\n";
     landCost = rand() % 10 + 17;
-    std::cout << "    1 акр земли стоит сейчас " << landCost << " бушель.\n\n";
+    std::cout << "    1 акр земли стоит сейчас " << landCost << " бушель.\n"<< endl;
+
 
     do {
         restartInput = true;
-        std::cout << "Сколько акров земли повелеваешь купить?";
+        std::cout << "\n" << "Сколько акров земли повелеваешь купить?";
         std::cin >> inputLand;
+        std::cout << "Сколько акров земли повелеваешь продать?";
+        std::cin >> inputSentLand;
         std::cout << "Сколько бушелей пшеницы повелеваешь съесть?";
         std::cin >> inputFood;
         std::cout << "Сколько акров земли повелеваешь засеять?";
         std::cin >> inputPsenica;
-            if (psenicaCount-(inputPsenica / 2 + inputFood + landCost * inputLand)>=0) { restartInput = false; }
-        std::cout << "\n";
+            if ((psenicaCount-(inputPsenica / 2 + inputFood + landCost * inputLand)+ inputSentLand*landCost >=0)&& (landCount- inputSentLand+ inputLand>0)) { restartInput = false; }
+        std::cout << ""<< endl;
     } while (restartInput); //пока не введут верно, не продолжать игру
 
     psenicaCount = psenicaCount - (inputPsenica / 2 + inputFood + landCost * inputLand); //сколько потратили пшенички
-    //std::cout <<"Пшенички осталось"<< psenicaCount << "\n";
+    //std::cout <<"Пшенички осталось"<< psenicaCount << ""<< endl;
     
 }
 void newTurn() {
-        std::cout <<"\n~~~~~~~~~~~~~~~~~~~~"<< turnCounter <<"~~~~~~~~~~~~~~~~~~~~\n";
-        std::cout << "Мой повелитель, соизволь поведать тебе:\n";
-        std::cout << "    В году " << turnCounter <<" твоего высочайшего правления:\n";
+        std::cout <<"\n~~~~~~~~~~~~~~~~~~~~"<< turnCounter <<"~~~~~~~~~~~~~~~~~~~~"<< endl;
+        std::cout << "Мой повелитель, соизволь поведать тебе:"<< endl;
+        std::cout << "    В году " << turnCounter <<" твоего высочайшего правления:"<< endl;
 
 
         //~~~~~~СЧИТАЕМ КОЛИЧЕСТВО ЖИТЕЛЕЙ~~~~~~
@@ -82,9 +92,9 @@ void newTurn() {
         nationDead = (float)nationLost / nationCount*100;// % УБИТЫХ
         
         if (nationDead >= 45)  { //проверка на % убитых
-        std::cout << "    Ты не смог накормить народ!\n";
-        std::cout << "    За это ты будешь казнен!\n";
-        std::cout << "    Ахахахах...\n";
+        std::cout << "    Ты не смог накормить народ!"<< endl;
+        std::cout << "    За это ты будешь казнен!"<< endl;
+        std::cout << "    Ахахахах..."<< endl;
         turnCounter = 10;
         P = 666;
     }
@@ -92,19 +102,19 @@ void newTurn() {
        
         P = P + nationDead; //% СМЕРТЕЙ ЗА ВСЕ РАУНДЫ
         if (nationLost != 0) {
-            std::cout << "    "<< nationLost << " человек умерли с голоду.\n";
+            std::cout << "    "<< nationLost << " человек умерли с голоду."<< endl;
         }
 
         //~~~СЧИТАЕМ УБЫЛЬ И ПРИРОСТ ПШЕНИЦЫ~~~
-        landCount = landCount + inputLand;
+        landCount = landCount + inputLand- inputSentLand;
         psenicaAdd = rand() % 6+1; //ПРИРОСТ ПШЕНИЦЫ С 1 ПОЛЯ
         if (inputPsenica - nationCount * 10 > 0) {
             std::cout << "    Мы собрали " << psenicaAdd * nationCount * 10 << " бушелей пшеницы,";
-            std::cout << "по " << psenicaAdd << " бушеля с акра;\n";
+            std::cout << "по " << psenicaAdd << " бушеля с акра;"<< endl;
         }
         else {
             std::cout << "    Мы собрали " << psenicaAdd * inputPsenica << " бушелей пшеницы,";
-            std::cout << " по " << psenicaAdd << " бушеля с акра;\n";
+            std::cout << " по " << psenicaAdd << " бушеля с акра;"<< endl;
         }
         //~~~ПОСЧИТАЛИ ПРИРОСТ ПШЕНИЦЫ, ПРОДОЛЖАЕМ СЧИТАТЬ ЖИТЕЛЕЙ~~~
 
@@ -113,19 +123,19 @@ void newTurn() {
         if (nationAdd < 0) { nationAdd = 0; } //проверка необходимости сообщения
         else if (nationAdd > 50) {
             nationAdd = 50;
-            std::cout << "    " << nationAdd << " человек прибыли в наш великий город;\n";
+            std::cout << "    " << nationAdd << " человек прибыли в наш великий город;"<< endl;
         }
         else {
-            std::cout << "    " << nationAdd << " человек прибыли в наш великий город;\n";
+            std::cout << "    " << nationAdd << " человек прибыли в наш великий город;"<< endl;
         }
 
         nationCount = nationCount + nationAdd - nationLost; //ОБЩЕЕ НАСЕЛЕНИЕ
 
         if (rand() % 100 < 15) { //ПРИШЛА ЛИ ЧУМА
-            std::cout << "    Чума уничтожила половину населения\n";
+            std::cout << "    Чума уничтожила половину населения"<< endl;
             nationCount = trunc(nationCount / 2);
         }
-        std::cout << "    Население города сейчас составляет " << nationCount << " человек;\n";
+        std::cout << "    Население города сейчас составляет " << nationCount << " человек;"<< endl;
 
 
         //~~~~~~СЧИТАЕМ КОЛИЧЕСТВО ПШЕНИЦЫ~~~~~~
@@ -134,22 +144,87 @@ void newTurn() {
         psenicaLost = ceil(rand() % 8* psenicaCount/100); //СКОЛЬКО ПШЕНИЦЫ СЪЕЛИ КРЫСЫ
         std::cout << "    Крысы истребили " << psenicaLost << " бушелей пшеницы,";
         psenicaCount = psenicaCount - psenicaLost;
-        std::cout << " оставив " << psenicaCount << " бушеля в амбарах;\n";
+        std::cout << " оставив " << psenicaCount << " бушеля в амбарах;"<< endl;
+        std::cout << "    Город сейчас занимает " << landCount << " акров;" << endl;
 
+
+
+        //~~~~~~ОСТАНОВКА ИГРЫ~~~~~~
+            cout << "\n" << "Повелитель! Хотите продолжить правление?" << endl;
+            string answer;
+            do {
+                cout << "yes - да, no - нет" << endl;
+                cin >> answer;
+            } while (!(answer == "yes") && !(answer == "no"));
+            if (answer == "no") {
+                leftGame = true;
+            }
+            else {
+                inputResorces();
+            }
         
 
-        inputResorces();
+
     }
 
 }
 
 
 //~~~~~~СОХРАНЕНИЕ ИГРЫ~~~~~~
-void saveGame() {}
+void saveGame() {
+        ofstream MyFile(path, std::fstream::trunc);
+
+        MyFile << turnCounter << endl;
+        MyFile << nationCount << endl;
+        MyFile << psenicaCount << endl;
+        MyFile << landCount << endl;
+        MyFile << P;
+        MyFile.close();
+}
 
 
 //~~~~~~ПРОВЕРКА НАЛИЧИЯ СОХРАНЕНИЯ~~~~~~
-void checkSaves() {}
+void checkSaves() {
+    ifstream MyFile(path);
+
+    if (MyFile.is_open()) {
+        fileExsists = true;
+        cout << "Повелитель! Не желаете ли продолжить прошлое правление?" << endl;
+        string answer;
+        do {
+            cout << "yes - да, no - нет" << endl;
+            cin >> answer;
+        } while (!(answer == "yes") && !(answer == "no"));
+        if (answer == "yes") {
+            int i = 0;
+            while (getline(MyFile, fileText, '\n')) {
+                switch (i)
+                {
+                case 0:
+                    turnCounter = std::stoi(fileText);
+                case 1:
+                    nationCount = std::stoi(fileText);
+                case 2:
+                    psenicaCount = std::stof(fileText);
+                case 3:
+                    landCount = std::stoi(fileText);
+                case 4:
+                    P = std::stoi(fileText);
+                }
+                i++;
+            }
+            std::cout << "Мой повелитель, соизволь поведать тебе:" << endl;
+            std::cout << "    Население города сейчас составляет " << nationCount << " человек;" << endl;
+            std::cout << "    Мы собрали " << psenicaCount << " бушелей пшеницы;" << endl;
+            std::cout << "    Город сейчас занимает " << landCount << " акров;" << endl;
+            inputResorces();
+        }
+        MyFile.close();
+    }
+    else {
+        fileExsists = false;
+    }
+}
 
 int main()
 {
@@ -169,27 +244,39 @@ int main()
         }
     }
 
-    std::cout << "\n#########################################\n";
-    std::cout << "Конец игры!\n";
 
-    if (P == 666) {
-        std::cout << "R.I.P.\n";
-    }
-    else {
-        if (P / turnCounter > 33 && landCount / nationCount < 7) {
-            std::cout << "\nИз-за вашей некомпетентности в управлении, народ устроил бунт, и изгнал вас их города. Теперь вы вынуждены влачить жалкое существование в изгнании!\n";
-        }
-        else if (P / turnCounter > 10 && landCount / nationCount < 9) {
-            std::cout << "\nВы правили железной рукой, подобно Нерону и Ивану Грозному. Народ вздохнул с облегчением, и никто больше не желает видеть вас правителем.\n";
-        }
-        else if (P / turnCounter > 3 && landCount / nationCount < 10) {
-            std::cout << "\nВы справились вполне неплохо, у вас, конечно, есть недоброжелатели, но многие хотели бы увидеть вас во главе города снова!\n";
+
+
+
+
+
+
+
+
+
+
+    if (turnCounter >= 10) {
+        std::cout << "\n#########################################" << endl;
+        std::cout << "Конец игры!" << endl;
+
+        if (P == 666) {
+            std::cout << "R.I.P." << endl;
         }
         else {
-            std::cout << "\nФантастика! Карл Великий, Дизраэли и Джефферсон вместе не справились бы лучше!!!\n";
+            if (P / turnCounter > 33 && landCount / nationCount < 7) {
+                std::cout << "\nИз-за вашей некомпетентности в управлении, народ устроил бунт, и изгнал вас их города. Теперь вы вынуждены влачить жалкое существование в изгнании!" << endl;
+            }
+            else if (P / turnCounter > 10 && landCount / nationCount < 9) {
+                std::cout << "\nВы правили железной рукой, подобно Нерону и Ивану Грозному. Народ вздохнул с облегчением, и никто больше не желает видеть вас правителем." << endl;
+            }
+            else if (P / turnCounter > 3 && landCount / nationCount < 10) {
+                std::cout << "\nВы справились вполне неплохо, у вас, конечно, есть недоброжелатели, но многие хотели бы увидеть вас во главе города снова!" << endl;
+            }
+            else {
+                std::cout << "\nФантастика! Карл Великий, Дизраэли и Джефферсон вместе не справились бы лучше!!!" << endl;
+            }
         }
     }
-
 
     return 0;
 }
